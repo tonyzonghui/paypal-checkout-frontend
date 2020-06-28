@@ -6,7 +6,7 @@
 
 <script>
 export default {
-  name: 'paypal',
+  name: "paypal",
   props: {
     amount: {
       type: Number,
@@ -14,101 +14,95 @@ export default {
     },
     currency: {
       type: String,
-      default: 'USD'
+      default: "USD"
     }
   },
-  data () {
-    return { success: false, error: false }
+  data() {
+    return { success: false, error: false };
   },
-  mounted () {
+  mounted() {
     const createOrder = (data, actions) => {
-      console.log('create order')
+      console.log("create order");
       const paymentData = {
         amount: this.amount,
         currency: this.currency
-      }
+      };
 
       return this.createPaypalOrder({ data: paymentData })
         .then(order => {
-          return order.data.orderID
+          return order.data.orderID;
         })
         .catch(error => {
-          console.log('create order error: ', error)
-          this.error = true
-        })
-    }
+          console.log("create order error: ", error);
+          this.error = true;
+        });
+    };
 
     const onApprove = data => {
-      const orderID = data.orderID
+      const orderID = data.orderID;
       this.captureOrder(orderID)
         .then(payerInfo => {
-          console.log('order payment: ', payerInfo)
-          this.checkoutComplete(true, payerInfo.data)
+          console.log("order payment: ", payerInfo);
+          this.checkoutComplete(true, payerInfo.data);
         })
         .catch(error => {
-          console.log('order capture failed: ', error)
-          this.checkoutComplete(false, null)
-        })
-    }
+          console.log("order capture failed: ", error);
+          this.checkoutComplete(false, null);
+        });
+    };
 
     paypal
       .Buttons({
-        env: 'sandbox',
+        env: "sandbox",
         style: {
-          locale: 'en-US',
-          layout: 'horizontal',
-          size: 'responsive',
-          color: 'gold',
-          shape: 'rect',
-          label: 'checkout',
-          tagline: 'false',
+          locale: "en-US",
+          layout: "horizontal",
+          size: "responsive",
+          color: "gold",
+          shape: "rect",
+          label: "checkout",
+          tagline: "false",
           fundingSource: paypal.FUNDING.PAYPAL
         },
         createOrder,
         onApprove
       })
-      .render('#paypal-button-container')
+      .render("#paypal-button-container");
   },
   methods: {
-    async createPaypalOrder (data) {
-      const order = await axios.post(
-        'http://localhost:1337/create-payment',
-        data
-      )
-      return order
+    async createPaypalOrder(data) {
+      const order = await axios.post("/create-payment", data);
+      return order;
     },
 
-    async captureOrder (orderID) {
-      const orderPayment = await axios.post(
-        'http://localhost:1337/checkout-paypal',
-        { orderID }
-      )
-      return orderPayment
+    async captureOrder(orderID) {
+      const orderPayment = await axios.post("/checkout-paypal", { orderID });
+      return orderPayment;
     },
 
-    checkoutComplete (success, payerInfo) {
+    checkoutComplete(success, payerInfo) {
       if (success) {
-        this.success = true
-        this.$store.commit('setCheckoutResult', {
+        this.success = true;
+        this.$store.commit("setCheckoutResult", {
           isComplete: true,
           hasError: false,
           payerInfo: payerInfo
-        })
+        });
 
         // go to checkout result page
-        this.$router.push({ name: 'CheckoutResult' })
+        this.$router.push({ name: "CheckoutResult" });
       } else {
-        this.error = true
-        this.$store.commit('setCheckoutResult', {
+        this.error = true;
+        this.$store.commit("setCheckoutResult", {
           isComplete: false,
           hasError: true,
           payerInfo: {}
-        })
-        this.$router.push('CheckoutResult')
+        });
+        this.$router.push("CheckoutResult");
       }
     }
   }
-}
+};
 </script>
 
 <style scoped>
