@@ -38,6 +38,9 @@ yarn lint
     - plugins: plugin libraries
 ```
 
+**Connect to local backend API server**
+If you want to connect to local backend api server for development, update `devServer.proxy` property in `vue.config.js` file.
+
 ### Demo App Flow
 
 There are 2 pages for the demo app:
