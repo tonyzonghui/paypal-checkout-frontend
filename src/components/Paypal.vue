@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div id="paypal-button-container"></div>
+    <div
+      id="paypal-button-container"
+      v-loading.fullscreen.lock="processing"
+    ></div>
   </div>
 </template>
 
@@ -10,44 +13,48 @@ export default {
   props: {
     amount: {
       type: Number,
-      default: 0
+      default: 0,
     },
     currency: {
       type: String,
-      default: "USD"
-    }
+      default: "USD",
+    },
   },
   data() {
-    return { success: false, error: false };
+    return { success: false, error: false, processing: false };
   },
   mounted() {
     const createOrder = (data, actions) => {
       console.log("create order");
       const paymentData = {
         amount: this.amount,
-        currency: this.currency
+        currency: this.currency,
       };
 
       return this.createPaypalOrder({ data: paymentData })
-        .then(order => {
+        .then((order) => {
           return order.data.orderID;
         })
-        .catch(error => {
+        .catch((error) => {
           console.log("create order error: ", error);
           this.error = true;
         });
     };
 
-    const onApprove = data => {
+    const onApprove = (data) => {
       const orderID = data.orderID;
-      this.captureOrder(orderID)
-        .then(payerInfo => {
+      this.processing = true;
+      return this.captureOrder(orderID)
+        .then((payerInfo) => {
           console.log("order payment: ", payerInfo);
           this.checkoutComplete(true, payerInfo.data);
         })
-        .catch(error => {
+        .catch((error) => {
           console.log("order capture failed: ", error);
           this.checkoutComplete(false, null);
+        })
+        .finally(() => {
+          this.processing = false;
         });
     };
 
@@ -62,10 +69,10 @@ export default {
           shape: "rect",
           label: "checkout",
           tagline: "false",
-          fundingSource: paypal.FUNDING.PAYPAL
+          fundingSource: paypal.FUNDING.PAYPAL,
         },
         createOrder,
-        onApprove
+        onApprove,
       })
       .render("#paypal-button-container");
   },
@@ -86,7 +93,7 @@ export default {
         this.$store.commit("setCheckoutResult", {
           isComplete: true,
           hasError: false,
-          payerInfo: payerInfo
+          payerInfo: payerInfo,
         });
 
         // go to checkout result page
@@ -96,12 +103,12 @@ export default {
         this.$store.commit("setCheckoutResult", {
           isComplete: false,
           hasError: true,
-          payerInfo: {}
+          payerInfo: {},
         });
         this.$router.push("CheckoutResult");
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
